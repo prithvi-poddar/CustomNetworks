@@ -87,7 +87,6 @@ class MultiHeadSelfAttention(nn.Module):
 
     def forward(self, x, mask=None):
         B, S, C = x.shape
-        mask = ~mask.to(torch.bool)
 
         x = self.Wqkv(x).reshape(B, S, 3, self.nh, C // self.nh)
         q, k, v = x.transpose(3, 1).unbind(dim=2)
@@ -95,8 +94,9 @@ class MultiHeadSelfAttention(nn.Module):
         attn = q @ k.transpose(-2, -1)
 
         attn = attn / np.sqrt(k.size(-1))
-        
+
         if mask is not None:
+            mask = ~mask.to(torch.bool)
             attn = attn.masked_fill(mask.view(B, 1, 1, S), float(-100000))
 
         attn = attn.softmax(dim=-1)
