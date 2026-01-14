@@ -85,7 +85,7 @@ class MultiHeadSelfAttention(nn.Module):
         self.attn_drop = nn.Dropout(attn_drop)
         self.out_drop = nn.Dropout(out_drop)
 
-    def forward(self, x, mask):
+    def forward(self, x, mask=None):
         B, S, C = x.shape
         mask = ~mask.to(torch.bool)
 
@@ -95,7 +95,9 @@ class MultiHeadSelfAttention(nn.Module):
         attn = q @ k.transpose(-2, -1)
 
         attn = attn / np.sqrt(k.size(-1))
-        attn = attn.masked_fill(mask.view(B, 1, 1, S), float(-100000))
+        
+        if mask is not None:
+            attn = attn.masked_fill(mask.view(B, 1, 1, S), float(-100000))
 
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
